@@ -1,39 +1,32 @@
 <template>
-  <div class="content-wrapper">
-    <div class="row text-center align-items-center">
-      <div class="col col-md-7 order-md-1 col-12 order-2">
-        <div id="google-map"></div>
-      </div>
-      <div class="col col-md-5 order-md-2 col-12 order-1">
-        <div class="row justify-content-center p-3">
-          <div class="col col-10">
-            <h2>Weather Discovery Map</h2>
-            <p class="small">
-              Select a point on the map, or drag marker to a new position, to
-              find real-time data on the local weather
-            </p>
-          </div>
+    <div class="content-wrapper">
+        <div class="row text-center align-items-center">
+            <div class="col col-md-7 order-md-1 col-12 order-2 google-map-wrapper">
+                <div id="google-map" :style="`width: ${mapDimensions.width}; height: ${mapDimensions.height}; position: relative; overflow: hidden;`"></div>
+            </div>
+            <div class="col col-md-5 order-md-2 col-12 mb-3 order-1">
+                <div class="row justify-content-center p-3">
+                    <div class="col col-10">
+                        <h2>Weather Discovery Map</h2>
+                        <p class="small">
+                            Select a point on the map, or drag marker to a new position, to
+                            find real-time data on the local weather
+                        </p>
+                    </div>
+                </div>
+                <template v-if="weather">
+                    <div class="row justify-content-center mx-3" v-for="(item, key) of weather" :key="key">
+                        <div class="col col-md-5 col-6 my-2">
+                            <span class="badge badge-primary w-100 px-3 py-2">{{ key }}</span>
+                        </div>
+                        <div class="col col-md-7 col-6 my-2 weather-data">
+                            {{ loading ? '---' : item }}
+                        </div>
+                    </div>
+                </template>
+            </div>
         </div>
-        <template v-if="!weather || loading">
-          <div class="row justify-content-center mx-3" v-for="(item, key) of weather" :key="key">
-            <div class="col col-md-5 col-6 my-2">
-              <h5>Loading Weather Data</h5>
-            </div>
-          </div>
-        </template>
-        <template v-else>
-          <div class="row justify-content-center mx-3" v-for="(item, key) of weather" :key="key">
-            <div class="col col-md-5 col-6 my-2">
-              <span class="badge badge-primary w-100 px-3 py-2">{{ key }}</span>
-            </div>
-            <div class="col col-md-7 col-6 my-2 weather-data">
-              {{ item }}
-            </div>
-          </div>
-        </template>
-      </div>
     </div>
-  </div>
 </template>
 
 <script>
@@ -50,6 +43,11 @@ export default {
             lng: -111.89062013069112,
         },
         map: null,
+        mapDimensions: {
+            width: '58.333vw',
+            height: '100vh'
+        },
+        windowWidth: 0,
         marker: null,
         loading: false,
         weather: null,
@@ -57,6 +55,9 @@ export default {
   },
 
   mounted() {
+    this.onResize();
+    window.addEventListener("resize", this.onResize);
+
     var mapLoader = new Loader({
         apiKey: this.googleApiKey,
         version: "weekly",
@@ -72,6 +73,17 @@ export default {
   },
 
   methods: {
+    onResize() {
+        this.windowWidth = window.innerWidth;
+
+        if(this.windowWidth <= 768) {
+            this.mapDimensions.width = '90vw';
+            this.mapDimensions.height = '35vh';
+        } else {
+            this.mapDimensions.width = '58.333vw';
+            this.mapDimensions.height = '100vh';
+        }
+    },
     loadGoogleMap() {
         this.map = new google.maps.Map(document.getElementById("google-map"), {
             center: this.latlng,
@@ -145,17 +157,18 @@ export default {
 
 <style lang="scss">
 .content-wrapper {
-  font-size: 20px;
+    font-size: 20px;
 
-  & .weather-data {
-    text-align: left;
-    background-color: #00000008;
-    border-radius: 0.25rem;
-  }
+    & .weather-data {
+        text-align: left;
+        background-color: #00000008;
+        border-radius: 0.25rem;
+    }
+
+    & .google-map-wrapper {
+        text-align: center;
+        text-align: -webkit-center;
+    }
 }
 
-#google-map {
-  height: 100vh;
-  width: 58.333vw;
-}
 </style>
